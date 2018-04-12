@@ -23,6 +23,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Map;
 
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.dba.TypesMapping;
@@ -41,18 +42,20 @@ class AttributeLoader extends PerCatalogAndSchemaLoader {
     private boolean firstRow;
     private boolean supportAutoIncrement;
 
-    AttributeLoader(DbAdapter adapter, DbLoaderConfiguration config, DbLoaderDelegate delegate) {
+    AttributeLoader(final DbAdapter adapter, final DbLoaderConfiguration config, final DbLoaderDelegate delegate) {
         super(adapter, config, delegate);
         firstRow = true;
         supportAutoIncrement = false;
     }
 
-    protected ResultSet getResultSet(String catalogName, String schemaName, DatabaseMetaData metaData) throws SQLException {
+    protected ResultSet getResultSet(final String catalogName, final String schemaName, final DatabaseMetaData metaData)
+            throws SQLException {
         return metaData.getColumns(catalogName, schemaName, WILDCARD, WILDCARD);
     }
 
     @Override
-    protected void processResultSetRow(CatalogFilter catalog, SchemaFilter schema, DbLoadDataStore map, ResultSet rs) throws SQLException {
+    protected void processResultSetRow(final CatalogFilter catalog, final SchemaFilter schema, final DbLoadDataStore map,
+                                       final ResultSet rs, final Map<String, Integer> lengthMap) throws SQLException {
         if (firstRow) {
             supportAutoIncrement = checkForAutoIncrement(rs);
             firstRow = false;
@@ -63,15 +66,15 @@ class AttributeLoader extends PerCatalogAndSchemaLoader {
         // table names. E.g. for the system table "WK$_ATTR_MAPPING" columns
         // are returned twice - as "WK$_ATTR_MAPPING" and "WK$$_ATTR_MAPPING"...
         // Go figure
-        String tableName = rs.getString("TABLE_NAME");
-        DbEntity entity = map.getDbEntity(tableName);
-        if(entity == null) {
+        final String tableName = rs.getString("TABLE_NAME");
+        final DbEntity entity = map.getDbEntity(tableName);
+        if (entity == null) {
             return;
         }
 
         // Filter out columns by name
-        String columnName = rs.getString("COLUMN_NAME");
-        PatternFilter columnFilter = schema.tables.getIncludeTableColumnFilter(tableName);
+        final String columnName = rs.getString("COLUMN_NAME");
+        final PatternFilter columnFilter = schema.tables.getIncludeTableColumnFilter(tableName);
         if (columnFilter == null || !columnFilter.isIncluded(columnName)) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Skip column '" + tableName + "." + columnName +
@@ -80,21 +83,21 @@ class AttributeLoader extends PerCatalogAndSchemaLoader {
             return;
         }
 
-        DbAttribute attribute = createDbAttribute(rs);
+        final DbAttribute attribute = createDbAttribute(rs, lengthMap);
         addToDbEntity(entity, attribute);
     }
 
-    private boolean checkForAutoIncrement(ResultSet rs) throws SQLException {
-        ResultSetMetaData rsMetaData = rs.getMetaData();
+    private boolean checkForAutoIncrement(final ResultSet rs) throws SQLException {
+        final ResultSetMetaData rsMetaData = rs.getMetaData();
         for (int i = 1; i <= rsMetaData.getColumnCount(); i++) {
-            if("IS_AUTOINCREMENT".equals(rsMetaData.getColumnLabel(i))) {
+            if ("IS_AUTOINCREMENT".equals(rsMetaData.getColumnLabel(i))) {
                 return true;
             }
         }
         return false;
     }
 
-    private void addToDbEntity(DbEntity entity, DbAttribute attribute) {
+    private void addToDbEntity(final DbEntity entity, final DbAttribute attribute) {
         attribute.setEntity(entity);
 
         // override existing attributes if it comes again
@@ -104,10 +107,10 @@ class AttributeLoader extends PerCatalogAndSchemaLoader {
         entity.addAttribute(attribute);
     }
 
-    private DbAttribute createDbAttribute(ResultSet rs) throws SQLException {
+    private DbAttribute createDbAttribute(final ResultSet rs, final Map<String, Integer> typeMaxSizeMap) throws SQLException {
 
         // gets attribute's (column's) information
-        int columnType = rs.getInt("DATA_TYPE");
+        final int columnType = rs.getInt("DATA_TYPE");
 
         // ignore precision of non-decimal columns
         int decimalDigits = -1;
@@ -119,11 +122,14 @@ class AttributeLoader extends PerCatalogAndSchemaLoader {
         }
 
         // create attribute delegating this task to adapter
-        DbAttribute attr = adapter.buildAttribute(
-                rs.getString("COLUMN_NAME"),
+        final String columnName = rs.getString("COLUMN_NAME");
+        final Integer maxLength = typeMaxSizeMap.get(columnName);
+        final int columnSize = rs.getInt("COLUMN_SIZE");
+        final DbAttribute attr = adapter.buildAttribute(
+                columnName,
                 rs.getString("TYPE_NAME"),
                 columnType,
-                rs.getInt("COLUMN_SIZE"),
+                maxLength != null && maxLength < columnSize ? maxLength : columnSize,
                 decimalDigits,
                 rs.getBoolean("NULLABLE"));
 

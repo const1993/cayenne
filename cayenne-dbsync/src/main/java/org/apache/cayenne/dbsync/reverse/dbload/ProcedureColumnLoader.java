@@ -22,6 +22,7 @@ package org.apache.cayenne.dbsync.reverse.dbload;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.dba.TypesMapping;
@@ -37,40 +38,41 @@ public class ProcedureColumnLoader extends PerCatalogAndSchemaLoader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DbLoader.class);
 
-    ProcedureColumnLoader(DbAdapter adapter, DbLoaderConfiguration config, DbLoaderDelegate delegate) {
+    ProcedureColumnLoader(final DbAdapter adapter, final DbLoaderConfiguration config, final DbLoaderDelegate delegate) {
         super(adapter, config, delegate);
     }
 
     @Override
-    protected ResultSet getResultSet(String catalogName, String schemaName, DatabaseMetaData metaData) throws SQLException {
+    protected ResultSet getResultSet(final String catalogName, final String schemaName, final DatabaseMetaData metaData) throws SQLException {
         return metaData.getProcedureColumns(catalogName, schemaName, WILDCARD, WILDCARD);
     }
 
     @Override
-    protected boolean shouldLoad(CatalogFilter catalog, SchemaFilter schema) {
-        PatternFilter filter = config.getFiltersConfig().proceduresFilter(catalog.name, schema.name);
+    protected boolean shouldLoad(final CatalogFilter catalog, final SchemaFilter schema) {
+        final PatternFilter filter = config.getFiltersConfig().proceduresFilter(catalog.name, schema.name);
         return !filter.isEmpty();
     }
 
     @Override
-    protected void processResultSetRow(CatalogFilter catalog, SchemaFilter schema, DbLoadDataStore map, ResultSet rs) throws SQLException {
-        String procSchema = rs.getString("PROCEDURE_SCHEM");
-        String procCatalog = rs.getString("PROCEDURE_CAT");
-        String name = rs.getString("PROCEDURE_NAME");
-        String key = Procedure.generateFullyQualifiedName(procCatalog, procSchema, name);
-        Procedure procedure = map.getProcedure(key);
+    protected void processResultSetRow(final CatalogFilter catalog, final SchemaFilter schema, final DbLoadDataStore map, final ResultSet rs,
+                                       final Map<String, Integer> typeMaxSizeMap) throws SQLException {
+        final String procSchema = rs.getString("PROCEDURE_SCHEM");
+        final String procCatalog = rs.getString("PROCEDURE_CAT");
+        final String name = rs.getString("PROCEDURE_NAME");
+        final String key = Procedure.generateFullyQualifiedName(procCatalog, procSchema, name);
+        final Procedure procedure = map.getProcedure(key);
         if (procedure == null) {
             return;
         }
 
-        ProcedureParameter column = loadProcedureParams(rs, key, procedure);
+        final ProcedureParameter column = loadProcedureParams(rs, key, procedure);
         if (column == null) {
             return;
         }
         procedure.addCallParameter(column);
     }
 
-    private ProcedureParameter loadProcedureParams(ResultSet rs, String key, Procedure procedure) throws SQLException {
+    private ProcedureParameter loadProcedureParams(final ResultSet rs, final String key, final Procedure procedure) throws SQLException {
         String columnName = rs.getString("COLUMN_NAME");
 
         // skip ResultSet columns, as they are not described in Cayenne procedures yet...
@@ -102,7 +104,7 @@ public class ProcedureColumnLoader extends PerCatalogAndSchemaLoader {
             }
         }
 
-        ProcedureParameter column = new ProcedureParameter(columnName);
+        final ProcedureParameter column = new ProcedureParameter(columnName);
         column.setDirection(getDirection(type));
         column.setType(columnType);
         column.setMaxLength(rs.getInt("LENGTH"));

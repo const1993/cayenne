@@ -22,18 +22,32 @@ package org.apache.cayenne.dbsync.reverse.dbload;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.dbsync.reverse.filters.CatalogFilter;
 import org.apache.cayenne.dbsync.reverse.filters.SchemaFilter;
 
+import static java.util.Collections.EMPTY_MAP;
+
 public abstract class PerCatalogAndSchemaLoader extends AbstractLoader {
 
-    PerCatalogAndSchemaLoader(DbAdapter adapter, DbLoaderConfiguration config, DbLoaderDelegate delegate) {
+    public static final String MY_SQL = "MySQL";
+
+    private Map<String, Integer> typeMaxSizehMap = new HashMap<>();
+
+    PerCatalogAndSchemaLoader(final DbAdapter adapter, final DbLoaderConfiguration config, final DbLoaderDelegate delegate) {
         super(adapter, config, delegate);
+        typeMaxSizehMap.put("datetime", 6);
+        typeMaxSizehMap.put("time", 6);
+        typeMaxSizehMap.put("timestamp", 6);
+        typeMaxSizehMap.put("date", 6);
     }
 
-    public void load(DatabaseMetaData metaData, DbLoadDataStore map) throws SQLException {
+    public void load(final DatabaseMetaData metaData, final DbLoadDataStore map) throws SQLException {
+
+        final Map<String, Integer> lengthMap = MY_SQL.equals(metaData.getDatabaseProductName()) ? typeMaxSizehMap : EMPTY_MAP;
         for (CatalogFilter catalog : config.getFiltersConfig().getCatalogs()) {
             for (SchemaFilter schema : catalog.schemas) {
                 if(!shouldLoad(catalog, schema)) {
@@ -41,18 +55,19 @@ public abstract class PerCatalogAndSchemaLoader extends AbstractLoader {
                 }
                 try (ResultSet rs = getResultSet(catalog.name, schema.name, metaData)) {
                     while (rs.next()) {
-                        processResultSetRow(catalog, schema, map, rs);
+                        processResultSetRow(catalog, schema, map, rs, lengthMap);
                     }
                 }
             }
         }
     }
 
-    boolean shouldLoad(CatalogFilter catalog, SchemaFilter schema) {
+    boolean shouldLoad(final CatalogFilter catalog, final SchemaFilter schema) {
         return true;
     }
 
-    abstract ResultSet getResultSet(String catalogName, String schemaName, DatabaseMetaData metaData) throws SQLException;
+    abstract ResultSet getResultSet(final String catalogName, final String schemaName, final DatabaseMetaData metaData) throws SQLException;
 
-    abstract void processResultSetRow(CatalogFilter catalog, SchemaFilter schema, DbLoadDataStore map, ResultSet rs) throws SQLException;
+    abstract void processResultSetRow(final CatalogFilter catalog, final SchemaFilter schema, final DbLoadDataStore map, final ResultSet rs,
+                                      final Map<String, Integer> lengthMap) throws SQLException;
 }

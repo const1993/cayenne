@@ -22,6 +22,7 @@ package org.apache.cayenne.dbsync.reverse.dbload;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.dbsync.reverse.filters.CatalogFilter;
@@ -35,31 +36,32 @@ public class ProcedureLoader extends PerCatalogAndSchemaLoader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DbLoader.class);
 
-    ProcedureLoader(DbAdapter adapter, DbLoaderConfiguration config, DbLoaderDelegate delegate) {
+    ProcedureLoader(final DbAdapter adapter, final DbLoaderConfiguration config, final DbLoaderDelegate delegate) {
         super(adapter, config, delegate);
     }
 
     @Override
-    protected ResultSet getResultSet(String catalogName, String schemaName, DatabaseMetaData metaData) throws SQLException {
+    protected ResultSet getResultSet(final String catalogName, final String schemaName, final DatabaseMetaData metaData) throws SQLException {
         return metaData.getProcedures(catalogName, schemaName, WILDCARD);
     }
 
     @Override
-    protected boolean shouldLoad(CatalogFilter catalog, SchemaFilter schema) {
-        PatternFilter filter = config.getFiltersConfig().proceduresFilter(catalog.name, schema.name);
+    protected boolean shouldLoad(final CatalogFilter catalog, final SchemaFilter schema) {
+        final PatternFilter filter = config.getFiltersConfig().proceduresFilter(catalog.name, schema.name);
         return !filter.isEmpty();
     }
 
     @Override
-    protected void processResultSetRow(CatalogFilter catalog, SchemaFilter schema, DbLoadDataStore map, ResultSet rs) throws SQLException {
-        PatternFilter filter = config.getFiltersConfig().proceduresFilter(catalog.name, schema.name);
-        String name = rs.getString("PROCEDURE_NAME");
+    protected void processResultSetRow(final CatalogFilter catalog, final SchemaFilter schema, final DbLoadDataStore map, final ResultSet rs,
+                                       final Map<String, Integer> typeMaxSizeMap) throws SQLException {
+        final PatternFilter filter = config.getFiltersConfig().proceduresFilter(catalog.name, schema.name);
+        final String name = rs.getString("PROCEDURE_NAME");
         if (!filter.isIncluded(name)) {
             LOGGER.info("skipping Cayenne PK procedure: " + name);
             return;
         }
 
-        Procedure procedure = new Procedure(name);
+        final Procedure procedure = new Procedure(name);
         procedure.setCatalog(rs.getString("PROCEDURE_CAT"));
         procedure.setSchema(rs.getString("PROCEDURE_SCHEM"));
 

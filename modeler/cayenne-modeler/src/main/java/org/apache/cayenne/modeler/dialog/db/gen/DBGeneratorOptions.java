@@ -66,7 +66,7 @@ public class DBGeneratorOptions extends CayenneController {
 
     protected TableSelectorController tables;
 
-    public DBGeneratorOptions(ProjectController parent, String title, Collection<DataMap> dataMaps) {
+    public DBGeneratorOptions(final ProjectController parent, final String title, final Collection<DataMap> dataMaps) {
         super(parent);
 
         this.dataMaps = dataMaps;
@@ -102,12 +102,12 @@ public class DBGeneratorOptions extends CayenneController {
 
     protected void initController() {
 
-        DefaultComboBoxModel<String> adapterModel = new DefaultComboBoxModel<>(
+        final DefaultComboBoxModel<String> adapterModel = new DefaultComboBoxModel<>(
                 DbAdapterInfo.getStandardAdapters());
         view.getAdapters().setModel(adapterModel);
         view.getAdapters().setSelectedIndex(0);
 
-        BindingBuilder builder = new BindingBuilder(
+        final BindingBuilder builder = new BindingBuilder(
                 getApplication().getBindingFactory(),
                 this);
 
@@ -145,14 +145,11 @@ public class DBGeneratorOptions extends CayenneController {
         builder.bindToAction(view.getCancelButton(), "closeAction()");
 
         // refresh SQL if different tables were selected
-        view.getTabs().addChangeListener(new ChangeListener() {
-
-            public void stateChanged(ChangeEvent e) {
-                if (view.getTabs().getSelectedIndex() == 0) {
-                    // this assumes that some tables where checked/unchecked... not very
-                    // efficient
-                    refreshGeneratorAction();
-                }
+        view.getTabs().addChangeListener(e -> {
+            if (view.getTabs().getSelectedIndex() == 0) {
+                // this assumes that some tables where checked/unchecked... not very
+                // efficient
+                refreshGeneratorAction();
             }
         });
     }
@@ -162,7 +159,7 @@ public class DBGeneratorOptions extends CayenneController {
      */
     protected void prepareGenerator() {
         try {
-            DbAdapter adapter = connectionInfo.makeAdapter(getApplication()
+            final DbAdapter adapter = connectionInfo.makeAdapter(getApplication()
                     .getClassLoadingService());
             generators = new ArrayList<>();
             for (DataMap dataMap : dataMaps) {
@@ -183,12 +180,12 @@ public class DBGeneratorOptions extends CayenneController {
      */
     protected void createSQL() {
         // convert them to string representation for display
-        StringBuilder buf = new StringBuilder();
+        final StringBuilder buf = new StringBuilder();
         for (DbGenerator generator : generators) {
-            Iterator<String> it = generator.configuredStatements().iterator();
-            String batchTerminator = generator.getAdapter().getBatchTerminator();
+            final Iterator<String> it = generator.configuredStatements().iterator();
+            final String batchTerminator = generator.getAdapter().getBatchTerminator();
 
-            String lineEnd = (batchTerminator != null)
+            final String lineEnd = (batchTerminator != null)
                     ? "\n" + batchTerminator + "\n\n"
                     : "\n\n";
 
@@ -249,9 +246,10 @@ public class DBGeneratorOptions extends CayenneController {
      */
     public void generateSchemaAction() {
 
-        DataSourceWizard connectWizard = new DataSourceWizard(
+        final DataSourceWizard connectWizard = new DataSourceWizard(
                 this.getParent(),
                 "Generate DB Schema: Connect to Database");
+        connectWizard.setProjectController((ProjectController) getParent());
         if (!connectWizard.startupAction()) {
             return;
         }
@@ -260,7 +258,7 @@ public class DBGeneratorOptions extends CayenneController {
 
         refreshGeneratorAction();
 
-        Collection<ValidationResult> failures = new ArrayList<ValidationResult>();
+        final Collection<ValidationResult> failures = new ArrayList<ValidationResult>();
 
         // sanity check...
         for (DbGenerator generator : generators) {
@@ -292,11 +290,11 @@ public class DBGeneratorOptions extends CayenneController {
      * Allows user to save generated SQL in a file.
      */
     public void storeSQLAction() {
-        JFileChooser fc = new JFileChooser();
+        final JFileChooser fc = new JFileChooser();
         fc.setDialogType(JFileChooser.SAVE_DIALOG);
         fc.setDialogTitle("Save SQL Script");
 
-        File projectDir = new File(getApplication()
+        final File projectDir = new File(getApplication()
                 .getProject()
                 .getConfigurationResource()
                 .getURL()
@@ -305,9 +303,9 @@ public class DBGeneratorOptions extends CayenneController {
         if (fc.showSaveDialog(getView()) == JFileChooser.APPROVE_OPTION) {
             refreshGeneratorAction();
             try {
-                File file = fc.getSelectedFile();
-                FileWriter fw = new FileWriter(file);
-                PrintWriter pw = new PrintWriter(fw);
+                final File file = fc.getSelectedFile();
+                final FileWriter fw = new FileWriter(file);
+                final PrintWriter pw = new PrintWriter(fw);
                 pw.print(textForSQL);
                 pw.flush();
                 pw.close();
@@ -325,7 +323,7 @@ public class DBGeneratorOptions extends CayenneController {
         return this.connectionInfo;
     }
 
-    public void setConnectionInfo(DBConnectionInfo connectionInfo) {
+    public void setConnectionInfo(final DBConnectionInfo connectionInfo) {
         this.connectionInfo = connectionInfo;
         refreshView();
     }

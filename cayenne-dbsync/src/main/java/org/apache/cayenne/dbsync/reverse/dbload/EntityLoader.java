@@ -24,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.dbsync.reverse.filters.CatalogFilter;
@@ -39,18 +40,19 @@ class EntityLoader extends PerCatalogAndSchemaLoader {
 
     private final String[] types;
 
-    EntityLoader(DbAdapter adapter, DbLoaderConfiguration config, DbLoaderDelegate delegate) {
+    EntityLoader(final DbAdapter adapter, final DbLoaderConfiguration config, final DbLoaderDelegate delegate) {
         super(adapter, config, delegate);
         types = getTableTypes();
     }
 
     @Override
-    protected ResultSet getResultSet(String catalogName, String schemaName, DatabaseMetaData metaData) throws SQLException {
+    protected ResultSet getResultSet(final String catalogName, final String schemaName, final DatabaseMetaData metaData) throws SQLException {
         return metaData.getTables(catalogName, schemaName, WILDCARD, types);
     }
 
     @Override
-    protected void processResultSetRow(CatalogFilter catalog, SchemaFilter schema, DbLoadDataStore map, ResultSet rs) throws SQLException {
+    protected void processResultSetRow(final CatalogFilter catalog, final SchemaFilter schema, final DbLoadDataStore map, final ResultSet rs,
+                                       final Map typeMaxSizeMap) throws SQLException {
         String name = rs.getString("TABLE_NAME");
         String catalogName = rs.getString("TABLE_CAT");
         String schemaName = rs.getString("TABLE_SCHEM");

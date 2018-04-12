@@ -35,6 +35,7 @@ CAY-2416 Change TreeMap for HashMap to store data in Cayenne model classes
 
 Bug Fixes:
 
+CAY-2246 Set maximum size of importing datetime formats size from MySQL database.
 CAY-2370 ValueObjectType for byte[] fails lookup
 CAY-2380 ReferenceMap should not store or return null values
 CAY-2381 cgen: meaningful PK with boxed type ends up with primitive type in generated source
