@@ -51,6 +51,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Utility class that generates database schema based on Cayenne mapping. It is
@@ -297,10 +298,10 @@ public class DbGenerator {
 				}
 
 				// create FK
-				if (shouldCreateTables && shouldCreateFKConstraints) {
+				if (shouldCreateFKConstraints) {
 					for (DbEntity ent : dbEntitiesInInsertOrder) {
 
-						if (createdTables.contains(ent.getName())) {
+						if (createTables.keySet().contains(ent.getName())) {
 							List<String> fks = createConstraints.get(ent.getName());
 							for (String fk : fks) {
 								safeExecute(connection, fk);
