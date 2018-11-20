@@ -1408,6 +1408,41 @@
 				</dependency>
 			</dependencies>
 		</profile>
+
+		<profile>
+			<id>oracle-docker</id>
+			<activation>
+				<property>
+					<name>cayenneTestConnection</name>
+					<value>oracle-docker</value>
+				</property>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>com.oracle</groupId>
+					<artifactId>oracle-driver</artifactId>
+					<version>11</version>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-failsafe-plugin</artifactId>
+						<configuration>
+							<systemPropertyVariables>
+								<cayenneAdapter>org.apache.cayenne.dba.oracle.OracleAdapter</cayenneAdapter>
+								<cayenneJdbcUsername>root</cayenneJdbcUsername>
+								<cayenneJdbcPassword>pass</cayenneJdbcPassword>
+								<cayenneJdbcUrl>jdbc:oracle:thin:@localhost:1521:xe</cayenneJdbcUrl>
+								<cayenneJdbcDriver>oracle.jdbc.driver.OracleDriver</cayenneJdbcDriver>
+							</systemPropertyVariables>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 		<profile>
 			<id>postgres</id>
 			<activation>

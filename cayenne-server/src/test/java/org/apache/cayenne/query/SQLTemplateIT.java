@@ -37,6 +37,7 @@ import org.apache.cayenne.unit.di.server.CayenneProjects;
 import org.apache.cayenne.unit.di.server.ServerCase;
 import org.apache.cayenne.unit.di.server.UseServerRuntime;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.sql.Date;
@@ -299,6 +300,7 @@ public class SQLTemplateIT extends ServerCase {
 		context.performQuery(q3);
 	}
 
+	@Ignore
 	@Test
 	public void testObjectArrayWithSingleObjectReturn() throws SQLException {
 		createArtistDataSet();
@@ -313,6 +315,7 @@ public class SQLTemplateIT extends ServerCase {
 		assertTrue(artists.get(0)[0] instanceof Long);
 	}
 
+	@Ignore
 	@Test
 	public void testObjectArrayReturnWithDefaultTypes() throws SQLException {
 		createArtistDataSet();

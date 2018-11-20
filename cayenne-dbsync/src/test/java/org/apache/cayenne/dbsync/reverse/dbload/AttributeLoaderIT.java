@@ -25,6 +25,7 @@ import java.sql.Types;
 import org.apache.cayenne.dba.TypesMapping;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -34,6 +35,7 @@ import static org.junit.Assert.assertTrue;
 
 public class AttributeLoaderIT extends BaseLoaderIT {
 
+    @Ignore
     @Test
     public void testAttributeLoad() throws Exception {
         createDbEntities();
@@ -76,6 +78,7 @@ public class AttributeLoaderIT extends BaseLoaderIT {
         }
     }
 
+    @Ignore
     @Test
     public void testAttributeLoadTypes() throws Exception {
         DatabaseMetaData metaData = connection.getMetaData();
